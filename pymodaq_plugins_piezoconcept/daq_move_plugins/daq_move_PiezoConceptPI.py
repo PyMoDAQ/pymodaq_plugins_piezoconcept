@@ -3,7 +3,7 @@ from pymodaq.daq_move.utility_classes import DAQ_Move_base
 from pymodaq.daq_move.utility_classes import comon_parameters
 from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
 from easydict import EasyDict as edict
-from pymodaq_plugins.hardware.piezoconcept.piezoconcept import PiezoConceptPI, Position, Time
+from ..hardware.piezoconcept.piezoconcept import PiezoConceptPI, Position, Time
 
 class DAQ_Move_PiezoConceptPI(DAQ_Move_base):
     """
