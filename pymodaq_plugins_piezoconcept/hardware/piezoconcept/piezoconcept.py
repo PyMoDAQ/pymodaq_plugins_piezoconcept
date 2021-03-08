@@ -1,4 +1,6 @@
-import pyvisa
+#import pyvisa
+import serial
+from serial.tools import list_ports
 import numpy as np
 
 class Position(object):
@@ -42,7 +44,7 @@ class PiezoConcept(object):
     def __init__(self):
         super().__init__()
         self._piezo=None
-        self._VISA_rm = pyvisa.ResourceManager()
+        #self._VISA_rm = pyvisa.ResourceManager()
         self.com_ports = self.get_ressources()
 
     @property
@@ -54,50 +56,56 @@ class PiezoConcept(object):
         self._timeout = to
         self._piezo.timeout = to
 
-    def get_ressources(self):
-        infos=self._VISA_rm.list_resources_info()
-        com_ports=[infos[key].alias for key in infos.keys()]
+    @classmethod
+    def get_ressources(cls):
+        com_ports = [str(port)[0:4] for port in list(list_ports.comports())]
         return com_ports
     
     def init_communication(self, com_port):
         if com_port in self.com_ports:
-            self._piezo = self._VISA_rm.open_resource(com_port)
+            self._piezo = serial.Serial()
+            self._piezo.port = com_port
             # set attributes
-            self._piezo.baud_rate = 115200
-            self._piezo.data_bits = 8
-            self._piezo.stop_bits = pyvisa.constants.StopBits['one']
-            self._piezo.parity = pyvisa.constants.Parity['none']
-            self._piezo.flow_control = 0
-            self._piezo.read_termination = self._piezo.LF
-            self._piezo.write_termination = self._piezo.LF
-            self.timeout = 2000
+            self._piezo.baudrate = 115200
+            self._piezo.bytesize = 8
+            self._piezo.stopbits = serial.STOPBITS_ONE
+            self._piezo.parity = serial.PARITY_NONE
+            self._piezo.rtscts  = False
+            # self._piezo.read_termination = self._piezo.LF
+            # self._piezo.write_termination = self._piezo.LF
+            self._piezo.open()
+            self.timeout = 2  # seconds
+
         else:
             raise IOError('{:s} is not a valid port'.format(com_port))
             
     def close_communication(self):
         self._piezo.close()
-        self._VISA_rm.close() 
+        #self._VISA_rm.close()
         
     def get_controller_infos(self):
         self._write_command('INFOS')
         return self._get_read()
 
     def _query(self, command):
-        ret = self._piezo.query(command)
+        self._write_command(command)
+        ret = self._piezo.read_until().decode('mbcs')[:-1]
         return ret
 
     def _write_command(self, command):
-        self._piezo.write(command)
+        command += '\n'
+        self._piezo.write(command.encode())
 
     
     def _get_read(self):
-        self._piezo.timeout = 50
+        self._piezo.timeout = 0.05
         info = ''
-        try:
-            while True:
-                info += self._piezo.read(encoding='mbcs')+'\n'
-        except pyvisa.errors.VisaIOError as e:
-            pass
+        while True:
+            read = self._piezo.read_until().decode('mbcs')
+            if read != '':
+                info += read
+            else:
+                break
         self._piezo.timeout = self._timeout
         return info
     
@@ -261,9 +269,11 @@ class PiezoConcept(object):
             elif ttl_options['type'] == 'end':
                 ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}'.format(port, 'o', ind_axis, 'e'))
             elif ttl_options['type'] == 'given_step':
-                ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}{:d}'.format(port, 'o', ind_axis, 'n', ttl_options['ind_start']))
+                ret = self._write_command(
+                    'CHAIO {:d}{:s}{:d}{:s}{:d}'.format(port, 'o', ind_axis, 'n', ttl_options['ind_start']))
             elif ttl_options['type'] == 'gate_step':
-                ret = self._write_command('CHAIO {:d}{:s}{:d}{:s}{:d}-{:d}'.format(port, 'o', ind_axis, 'g', ttl_options['ind_start'],
+                ret = self._write_command(
+                    'CHAIO {:d}{:s}{:d}{:s}{:d}-{:d}'.format(port, 'o', ind_axis, 'g', ttl_options['ind_start'],
                                                              ttl_options['ind_stop']))
 
         else:
@@ -313,3 +323,9 @@ class PiezoConceptPI(PiezoConcept):
 
         ret = self._write_command(cmd)
         return ret
+
+
+if __name__ == '__main__':
+    p = PiezoConcept()
+    p.init_communication('COM5')
+    p.get_controller_infos()

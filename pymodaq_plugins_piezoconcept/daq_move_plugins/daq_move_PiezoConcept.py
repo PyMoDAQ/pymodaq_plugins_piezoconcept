@@ -18,7 +18,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
     #find available COM ports
     import serial.tools.list_ports
     ports = [str(port)[0:4] for port in list(serial.tools.list_ports.comports())]
-    port = 'COM6' if 'COM6' in ports else ports[0] if len(ports) > 0 else ''
+    port = 'COM5' if 'COM5' in ports else ports[0] if len(ports) > 0 else ''
     #if ports==[]:
     #    ports.append('')
 
