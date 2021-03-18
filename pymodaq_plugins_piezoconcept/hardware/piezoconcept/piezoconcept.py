@@ -55,6 +55,7 @@ class PiezoConcept(object):
     def timeout(self, to):
         self._timeout = to
         self._piezo.timeout = to
+        self._piezo.write_timeout = to
 
     @classmethod
     def get_ressources(cls):
