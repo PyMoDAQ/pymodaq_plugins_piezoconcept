@@ -1,32 +1,11 @@
-pymodaq_plugins_piezoconcept (PiezoConcept Stages)
-###############
+# PyMoDAQ Plugins
 
-.. image:: https://img.shields.io/pypi/v/pymodaq_plugins_piezoconcept.svg
-   :target: https://pypi.org/project/pymodaq_plugins_piezoconcept/
-   :alt: Latest Version
+PyMoDAQ, Modular Data Acquisition with Python, is a set of **python** modules used to perform automated measurements. 
 
-.. image:: https://readthedocs.org/projects/pymodaq/badge/?version=latest
-   :target: https://pymodaq.readthedocs.io/en/stable/?badge=latest
-   :alt: Documentation Status
+This repository contains a set of PyMoDAQ plugins for Actuators from Piezoconcept (Tested on the Bio200 XY stage. Include a version of the controller firmware emulating functions from PhysikInstrumente)
 
-.. image:: https://github.com/CEMES-CNRS/pymodaq_plugins_piezoconcept/workflows/Upload%20Python%20Package/badge.svg
-    :target: https://github.com/CEMES-CNRS/pymodaq_plugins_piezoconcept
+For an exhaustive list of the available plugins, see https://github.com/CEMES-CNRS/pymodaq_plugin_manager/blob/main/pymodaq_plugin_manager/doc/PluginList.md
 
-PyMoDAQ plugin for Actuators from Piezoconcept (Tested on the Bio200 XY stage. Include a version of the
-controller firmware emulating functions from PhysikInstrumente
+GitHub repo: https://github.com/CEMES-CNRS
 
-
-Authors
-=======
-
-* Sebastien J. Weber
-
-Instruments
-===========
-Below is the list of instruments included in this plugin
-
-Actuators
-+++++++++
-
-* **PiezoConcept** : piezoconcept stages (tested on BIO2.100) using the usual serial commands
-* **PiezoConceptPI** Special firmware to emulate functions form the GCS2 library from Physik Instrumente
+Documentation: http://pymodaq.cnrs.fr/
