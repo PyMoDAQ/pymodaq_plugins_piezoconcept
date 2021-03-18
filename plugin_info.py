@@ -8,5 +8,5 @@ author = 'Sebastien Weber'
 author_email = 'sebastien.weber@cemes.fr'
 
 #packages required for your plugin:
-packages_required = ['pyserial']
+packages_required = ['pyserial', 'pyvisa']
 ##
