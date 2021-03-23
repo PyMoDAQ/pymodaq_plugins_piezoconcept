@@ -1,5 +1,5 @@
 pymodaq_plugins_piezoconcept (PiezoConcept Stages)
-###############
+##################################################
 
 .. image:: https://img.shields.io/pypi/v/pymodaq_plugins_piezoconcept.svg
    :target: https://pypi.org/project/pymodaq_plugins_piezoconcept/
@@ -29,4 +29,4 @@ Actuators
 +++++++++
 
 * **PiezoConcept** : piezoconcept stages (tested on BIO2.100) using the usual serial commands
-* **PiezoConceptPI** Special firmware to emulate functions form the GCS2 library from Physik Instrumente
+* **PiezoConceptPI**: Special firmware to emulate functions form the GCS2 library from Physik Instrumente
