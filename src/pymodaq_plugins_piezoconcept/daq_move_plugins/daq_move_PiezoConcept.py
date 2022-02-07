@@ -174,7 +174,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         out = self.controller.move_axis('ABS', pos)
         #self.move_is_done = True
         QThread.msleep(50) #to make sure the closed loop converged
-        self.poll_moving()
+
 
 
     def move_Rel(self,position):
@@ -200,7 +200,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         pos = Position(self.settings.child('multiaxes', 'axis').value(), position*1000, unit='n')  # always use microns for simplicity
         out = self.controller.move_axis('REL', pos)
         QThread.msleep(50)  # to make sure the closed loop converged
-        self.poll_moving()
+
 
     def move_Home(self):
         """
