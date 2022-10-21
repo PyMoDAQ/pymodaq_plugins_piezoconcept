@@ -9,8 +9,8 @@ pymodaq_plugins_piezoconcept (PiezoConcept Stages)
    :target: https://pymodaq.readthedocs.io/en/stable/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://github.com/CEMES-CNRS/pymodaq_plugins_piezoconcept/workflows/Upload%20Python%20Package/badge.svg
-    :target: https://github.com/CEMES-CNRS/pymodaq_plugins_piezoconcept
+.. image:: https://github.com/PyMoDAQ/pymodaq_plugins_piezoconcept/workflows/Upload%20Python%20Package/badge.svg
+    :target: https://github.com/PyMoDAQ/pymodaq_plugins_piezoconcept
 
 PyMoDAQ plugin for actuators from Piezoconcept (Tested on the Bio2.100 XY stage). Include a version of the
 controller firmware emulating functions from PhysikInstrumente
