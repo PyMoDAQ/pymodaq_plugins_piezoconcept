@@ -1,9 +1,9 @@
 from qtpy.QtCore import QThread
-from pymodaq.control_modules.move_utility_classes import DAQ_Move_base
-from pymodaq.daq_move.utility_classes import comon_parameters
-from pymodaq.daq_utils.daq_utils import ThreadCommand, getLineInfo
+from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
+from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
 from easydict import EasyDict as edict
-from ..hardware.piezoconcept.piezoconcept import PiezoConcept, Position, Time
+from pymodaq_plugins_piezoconcept.hardware.piezoconcept.piezoconcept import PiezoConcept, Position, Time
+
 
 class DAQ_Move_PiezoConcept(DAQ_Move_base):
     """
@@ -21,7 +21,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
     port = 'COM6' if 'COM6' in ports else ports[0] if len(ports) > 0 else ''
     #if ports==[]:
     #    ports.append('')
-
+    _epsilon = 1
 
     is_multiaxes = True
     stage_names = ['X', 'Y', 'Z']
@@ -32,18 +32,10 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
     params= [{'title': 'Time interval (ms):', 'name': 'time_interval', 'type': 'int', 'value': 200},
              {'title': 'Controller Info:', 'name': 'controller_id', 'type': 'text', 'value': '', 'readonly': True},
              {'title': 'COM Port:', 'name': 'com_port', 'type': 'list', 'limits': ports, 'value': port},
-              {'title': 'MultiAxes:', 'name': 'multiaxes', 'type': 'group','visible':is_multiaxes, 'children':[
-                        {'title': 'is Multiaxes:', 'name': 'ismultiaxes', 'type': 'bool', 'value': is_multiaxes, 'default': False},
-                        {'title': 'Status:', 'name': 'multi_status', 'type': 'list', 'value': 'Master', 'limits': ['Master', 'Slave']},
-                        {'title': 'Axis:', 'name': 'axis', 'type': 'list',  'limits':stage_names},
-                        
-                        ]}]+comon_parameters
+             ] + comon_parameters_fun(is_multiaxes, stage_names, epsilon=_epsilon)
 
-    def __init__(self,parent=None,params_state=None):
-        super().__init__(parent, params_state)
-
-        self.controller=None
-        self.settings.child(('epsilon')).setValue(1)
+    def ini_attributes(self):
+        self.controller: PiezoConcept = None
 
     def ini_stage(self, controller=None):
         """
@@ -69,80 +61,41 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
             daq_utils.ThreadCommand
         """
 
-        # initialize the stage and its controller status
-        # controller is an object that may be passed to other instances of DAQ_Move_Mock in case
-        # of one controller controlling multiaxes
-        try:
-            self.status.update(edict(info="",controller=None,initialized=False))
+        self.ini_stage_init(old_controller=controller,
+                            new_controller=PiezoConcept())
+        if self.settings['multiaxes', 'multi_status'] == "Master":
+            self.controller.init_communication(self.settings['com_port'])
 
+        controller_id = self.controller.get_controller_infos()
+        self.settings.child('controller_id').setValue(controller_id)
 
-            #check whether this stage is controlled by a multiaxe controller (to be defined for each plugin)
+        self.settings.child('bounds', 'is_bounds').setValue(True)
+        self.settings.child('bounds', 'min_bound').setValue(self.min_bound)
+        self.settings.child('bounds', 'max_bound').setValue(self.max_bound)
+        self.settings.child('scaling', 'use_scaling').setValue(True)
+        self.settings.child('scaling', 'offset').setValue(self.offset)
+        self.move_abs(0)
 
-            # if mutliaxes then init the controller here if Master state otherwise use external controller
-            if self.settings.child('multiaxes', 'ismultiaxes').value() and self.settings.child('multiaxes','multi_status').value()=="Slave":
-                if controller is None: 
-                    raise Exception('no controller has been defined externally while this stage is a slave one')
-                else:
-                    self.controller = controller
-            else: #Master stage
-                try:
-                    self.close()
-                except:
-                    pass
-                self.controller = PiezoConcept()
-                self.controller.init_communication(self.settings.child(('com_port')).value())
-
-            controller_id = self.controller.get_controller_infos()
-            self.settings.child(('controller_id')).setValue(controller_id)
-
-            self.settings.child('bounds', 'is_bounds').setValue(True)
-            self.settings.child('bounds', 'min_bound').setValue(self.min_bound)
-            self.settings.child('bounds', 'max_bound').setValue(self.max_bound)
-            self.settings.child('scaling', 'use_scaling').setValue(True)
-            self.settings.child('scaling', 'offset').setValue(self.offset)
-
-            self.move_Abs(0)
-
-
-            self.settings.child(('epsilon')).setValue(2)
-            self.status.info = controller_id
-            self.status.controller = self.controller
-            self.status.initialized = True
-            return self.status
-
-        except Exception as e:
-            self.emit_status(ThreadCommand('Update_Status', [getLineInfo()+ str(e), 'log']))
-            self.status.info = getLineInfo()+ str(e)
-            self.status.initialized = False
-            return self.status
+        info = controller_id
+        initialized = True
+        return info, initialized
 
     def close(self):
         """
             close the current instance of Piezo instrument.
         """
         try:
-            self.move_Abs(0)
+            self.move_abs(0)
             QThread.msleep(1000)
         except:
             pass
-
 
         self.controller.close_communication()
         self.controller = None
 
 
-    def check_position(self):
+    def get_actuator_value(self):
         """
-            Check the current position from the hardware.
-
-            Returns
-            -------
-            float
-                The position of the hardware.
-
-            See Also
-            --------
-            DAQ_Move_base.get_position_with_scaling, daq_utils.ThreadCommand
         """
         position = self.controller.get_position(self.settings.child('multiaxes', 'axis').value())  #in mm
         pos = position.pos/1000  # in um
@@ -152,9 +105,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         #print(pos)
         return self.target_position
 
-
-
-    def move_Abs(self,position):
+    def move_abs(self, position):
         """
 
         Parameters
@@ -175,9 +126,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         #self.move_is_done = True
         QThread.msleep(50) #to make sure the closed loop converged
 
-
-
-    def move_Rel(self,position):
+    def move_rel(self,position):
         """
             Make the hardware relative move of the Piezo instrument from the given position after thread command signal was received in DAQ_Move_main.
 
@@ -202,22 +151,26 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         QThread.msleep(50)  # to make sure the closed loop converged
 
 
-    def move_Home(self):
+    def move_home(self):
         """
             Move to the absolute vlue 100 corresponding the default point of the Piezo instrument.
 
             See Also
             --------
-            DAQ_Move_base.move_Abs
+            DAQ_Move_base.move_abs
         """
-        self.move_Abs(100) #put the axis on the middle position so 100µm
+        self.move_abs(100) #put the axis on the middle position so 100µm
 
     def stop_motion(self):
-      """
+        """
         Call the specific move_done function (depending on the hardware).
 
         See Also
         --------
         move_done
-      """
-      self.move_done()
+        """
+        self.move_done()
+
+
+if __name__ == '__main__':
+    main(__file__, init=False)
