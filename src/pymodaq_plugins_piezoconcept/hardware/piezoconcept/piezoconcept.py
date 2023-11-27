@@ -1,5 +1,9 @@
 import pyvisa
 import numpy as np
+from ... import set_logger
+
+logger = set_logger('piezoconcept_driver')
+
 
 class Position(object):
     units=['n', 'u']
@@ -113,6 +117,9 @@ class PiezoConcept(object):
             raise Exception('{:s} is not a valid displacement type'.format(move_type))
 
         ret = self._query(cmd)
+        if 'Ok' not in ret:
+            if 'Ok' not in self._get_read():
+                logger.warning('wrong return from the move command')
         return ret
 
     def get_position(self, axis='X'):

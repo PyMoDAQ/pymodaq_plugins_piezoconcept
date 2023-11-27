@@ -1,8 +1,10 @@
 from qtpy.QtCore import QThread
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
-from pymodaq.utils.daq_utils import ThreadCommand, getLineInfo
-from easydict import EasyDict as edict
+from pymodaq.utils.daq_utils import ThreadCommand
 from pymodaq_plugins_piezoconcept.hardware.piezoconcept.piezoconcept import PiezoConcept, Position, Time
+from pymodaq_plugins_piezoconcept.utils import Config
+
+config = Config()
 
 
 class DAQ_Move_PiezoConcept(DAQ_Move_base):
@@ -18,7 +20,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
     #find available COM ports
     import serial.tools.list_ports
     ports = [str(port)[0:4] for port in list(serial.tools.list_ports.comports())]
-    port = 'COM6' if 'COM6' in ports else ports[0] if len(ports) > 0 else ''
+    port = config('com_port') if config('com_port') in ports else ports[0] if len(ports) > 0 else ''
     #if ports==[]:
     #    ports.append('')
     _epsilon = 1
@@ -39,30 +41,19 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
 
     def ini_stage(self, controller=None):
         """
-            Initialize the controller and stages (axes) with given parameters.
 
-            =============== =========================================== ===========================================================================================
-            **Parameters**   **Type**                                     **Description**
-
-            *controller*     instance of the specific controller object   If defined this hardware will use it and will not initialize its own controller instance
-            =============== =========================================== ===========================================================================================
-
-            Returns
-            -------
-            Easydict
-                dictionnary containing keys:
-                  * *info* : string displaying various info
-                  * *controller*: instance of the controller object in order to control other axes without the need to init the same controller twice
-                  * *stage*: instance of the stage (axis or whatever) object
-                  * *initialized*: boolean indicating if initialization has been done corretly
-
-            See Also
-            --------
-            daq_utils.ThreadCommand
         """
 
         self.ini_stage_init(old_controller=controller,
                             new_controller=PiezoConcept())
+
+        controller_id = self.do_init()
+
+        info = controller_id
+        initialized = True
+        return info, initialized
+
+    def do_init(self) -> str:
         if self.settings['multiaxes', 'multi_status'] == "Master":
             self.controller.init_communication(self.settings['com_port'])
 
@@ -75,24 +66,17 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         self.settings.child('scaling', 'use_scaling').setValue(True)
         self.settings.child('scaling', 'offset').setValue(self.offset)
         self.move_abs(0)
-
-        info = controller_id
-        initialized = True
-        return info, initialized
+        return controller_id
 
     def close(self):
         """
             close the current instance of Piezo instrument.
         """
-        try:
+        if self.controller is not None:
             self.move_abs(0)
             QThread.msleep(1000)
-        except:
-            pass
-
-        self.controller.close_communication()
+            self.controller.close_communication()
         self.controller = None
-
 
     def get_actuator_value(self):
         """
@@ -101,8 +85,6 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         pos = position.pos/1000  # in um
         pos = self.get_position_with_scaling(pos)
         self.current_position = self.target_position  #should be pos but not precise enough conpared to set position
-        self.emit_status(ThreadCommand('check_position', [self.target_position]))
-        #print(pos)
         return self.target_position
 
     def move_abs(self, position):
