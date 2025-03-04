@@ -1,6 +1,6 @@
 from qtpy.QtCore import QThread
 from pymodaq.control_modules.move_utility_classes import DAQ_Move_base, comon_parameters_fun, main
-from pymodaq.utils.daq_utils import ThreadCommand
+
 from pymodaq_plugins_piezoconcept.hardware.piezoconcept.piezoconcept import PiezoConcept, Position, Time
 from pymodaq_plugins_piezoconcept.utils import Config
 
