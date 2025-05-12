@@ -87,8 +87,8 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         position = DataActuator(data=pos.pos,
                                 units='nm' if pos.unit == 'n' else 'um')
         position = self.get_position_with_scaling(position)
-        self.current_position = self.target_position  #should be pos but not precise enough conpared to set position
-        return self.target_position
+        self.current_value = self.target_value  #should be pos but not precise enough conpared to set position
+        return self.target_value
 
     def move_abs(self, position: DataActuator):
         """
@@ -102,7 +102,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
 
         """
         position = self.check_bound(position)  #limits the position within the specified bounds (-100,100)
-        self.target_position = position
+        self.target_value = position
         position = self.set_position_with_scaling(position)
 
         #get positions in controller units
@@ -113,8 +113,8 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
     def move_rel(self, position: DataActuator):
         """ Make the hardware relative move of the Piezo instrument from the given position
         """
-        position = self.check_bound(self.current_position+position)-self.current_position
-        self.target_position = position+self.current_position
+        position = self.check_bound(self.current_value+position)-self.current_value
+        self.target_value = position+self.current_value
 
         position = self.set_position_relative_with_scaling(position)
 
