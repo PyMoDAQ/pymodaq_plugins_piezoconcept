@@ -51,7 +51,8 @@ classifiers = [
 [build-system]
 requires = [
     "hatchling>=1.9.0",
-    "hatch-vcs", "toml",
+    "hatch-vcs",
+    "toml",
     "pymodaq_utils>=0.0.6",
 ]
 build-backend = "hatchling.build"

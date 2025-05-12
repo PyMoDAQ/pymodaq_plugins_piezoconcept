@@ -7,6 +7,7 @@ from pymodaq_plugins_piezoconcept.utils import Config
 config = Config()
 
 
+
 class DAQ_Move_PiezoConcept(DAQ_Move_base):
     """
     Plugin to drive piezoconcpet XY (Z) stages. There is a string nonlinear offset between the set position and the read
@@ -43,9 +44,10 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         """
 
         """
-
-        self.ini_stage_init(old_controller=controller,
-                            new_controller=PiezoConcept())
+        if self.is_master:
+            self.controller = PiezoConcept()
+        else:
+            self.controller = controller
 
         controller_id = self.do_init()
 
@@ -54,7 +56,7 @@ class DAQ_Move_PiezoConcept(DAQ_Move_base):
         return info, initialized
 
     def do_init(self) -> str:
-        if self.settings['multiaxes', 'multi_status'] == "Master":
+        if self.is_master:
             self.controller.init_communication(self.settings['com_port'])
 
         controller_id = self.controller.get_controller_infos()
