@@ -13,7 +13,10 @@ name = "pymodaq_plugins_piezoconcept"
 description = 'Set of PyMoDAQ plugins for Actuators from Piezoconcept (Tested on the Bio200 XY stage. Include a version of the controller firmware emulating functions from PhysikInstrumente)'
 
 dependencies = [
-    "pymodaq>=5.0.9",
+    "pymodaq>=5.3.2",
+    "pymodaq_utils>=5.3.1",
+    "pymodaq_gui>=5.3.0",
+    "pymodaq_data>=5.3.0",
     'pyserial',
     'pyvisa',
 ]
